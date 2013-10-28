@@ -1,0 +1,14 @@
+<?php
+
+/**
+ * @file
+ * Prerender, prefetch, dns-prefetch, helper with visitor flow knowledge
+ * provided by Google Analytics.
+ *
+ * This is the main module file.
+ *
+ * @todo JavaScript API for pre
+ * @todo Prerender stuff
+ * @todo Prefetch stuff
+ * @todo Google Analytics
+ */

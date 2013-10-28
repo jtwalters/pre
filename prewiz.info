@@ -1,4 +1,0 @@
-name = prewiz
-description = Prerender (prefetch, pre-*) helper with visitor flow knowledge provided by Google Analytics.
-core = 7.x
-dependencies[] = googleanalytics
