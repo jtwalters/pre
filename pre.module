@@ -2,8 +2,8 @@
 
 /**
  * @file
- * Prerender, prefetch, dns-prefetch, helper with visitor flow knowledge
- * provided by Google Analytics.
+ * Prerender/prefetch/dns-prefetch helper with visitor flow knowledge provided
+ * by Google Analytics.
  *
  * This is the main module file.
  *
