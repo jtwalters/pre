@@ -149,7 +149,16 @@ function pre_update_ga_process($user, $pass, $property) {
         // [source path, destination path, probability]
         foreach($result as $row) {
           list($source, $destination, $probability) = $row;
-          // @todo replace values into database (key = [source, destination])
+          // insert/update probability value for key [source, destination]
+          db_merge('pre_visitor_flow')
+            ->key(array(
+              'source_path' => $source,
+              'destination_path' => $destination,
+            ))
+            ->fields(array(
+              'probability' => $probability,
+            ))
+            ->execute();
         }
         pre_log('status', t('Successfully processed GA data for property @property', array('@property' => $property)));
       }

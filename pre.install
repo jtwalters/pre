@@ -1,0 +1,50 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the pre module.
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+function pre_uninstall() {
+  variable_del('pre_interval');
+  variable_del('pre_next_execution');
+}
+
+/**
+ * Implements hook_schema().
+ */
+function pre_schema() {
+  $schema = array();
+
+  $schema['pre_visitor_flow'] = array(
+    'description' => 'Table for storing GA visitor flow data',
+    'fields' => array(
+      'source_path' => array(
+        'description' => 'The source path',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'destination_path' => array(
+        'description' => 'The destination path',
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => '',
+      ),
+      'probability' => array(
+        'description' => 'Probability (a value between 0 and 1)',
+        'type' => 'float',
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+    ),
+    'primary key' => array('source_path', 'destination_path'),
+  );
+
+  return $schema;
+}
