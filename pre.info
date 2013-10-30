@@ -1,3 +1,4 @@
 name = pre
 description = Prerender/prefetch/dns-prefetch helper with visitor flow knowledge provided by Google Analytics.
 core = 7.x
+dependencies[] = google_analytics_reports

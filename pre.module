@@ -13,3 +13,28 @@
  * @todo Google Analytics
  * @todo drush
  */
+
+
+/*
+ * Implements hook_init()
+ */
+function pre_init() {
+  // include helper functions
+  module_load_include('inc', 'pre');
+}
+
+/**
+ * Implements hook_cron()
+ */
+function pre_cron() {
+  // Default to a daily interval
+  $interval = variable_get('pre_interval', 86400);
+
+  // We usually don't want to act every time cron runs (which could be every
+  // minute) so keep a time for the next run in a variable.
+  if (time() >= variable_get('pre_next_execution', 0)) {
+    pre_update_ga();
+    watchdog('pre', 'pre_cron executed');
+    variable_set('pre_next_execution', time() + $interval);
+  }
+}
