@@ -4,9 +4,9 @@ Prerender/prefetch/dns-prefetch helper with visitor flow knowledge provided by G
 
 ## Requirements
 
-You need to install the `google_analytics_api` module which is provided by the `google_analytics_reports` module.
+You must have the `google_analytics_api` (7.x-3.x) module which is provided by the `google_analytics_reports` module.
 
-Next, you need to visit `admin/settings/google-analytics-reports` to authenticate with Google (via oauth).
+Next, you need to visit `admin/config/system/google-analytics-reports` to authenticate with Google (via oauth).
 
 ## Usage
 
