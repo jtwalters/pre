@@ -7,13 +7,11 @@
  *
  * This is the main module file.
  *
- * @todo JavaScript API for pre
- * @todo Prerender stuff
  * @todo Prefetch stuff
- * @todo Google Analytics
- * @todo drush
+ * @todo JavaScript API for pre
  */
 
+define('PRE_DEFAULT_PRERENDER_PROBABILITY', 50);
 
 /*
  * Implements hook_init()
@@ -21,6 +19,80 @@
 function pre_init() {
   // include helper functions
   module_load_include('inc', 'pre');
+}
+
+/**
+ * Implementation of hook_menu()
+ */
+function pre_menu() {
+  $items = array();
+
+  $items['admin/config/system/pre'] = array(
+    'title' => 'Pre',
+    'description' => 'Configure pre module settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pre_admin'),
+    'access arguments' => array('administer pre settings'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_permission().
+ */
+function pre_permission() {
+  return array(
+    'administer pre' => array(
+      'title' => t('administer pre settings'),
+    ),
+  );
+}
+
+/**
+ * Menu callback - admin form
+ */
+function pre_admin() {
+  $form = array();
+  $options = array();
+  for ($i = 10; $i <= 100; $i += 10) {
+    $options[$i] = "$i%";
+  }
+  $form['pre_prerender_probability'] = array(
+    '#type' => 'select',
+    '#title' => 'Prerender Threshold',
+    '#description' => 'Probability threshold for requesting a prerender—i.e., pages with at least <em>n%</em> chance of being viewed next will request prerender.',
+    '#options' => $options,
+    '#default_value' => variable_get('pre_prerender_probability', PRE_DEFAULT_PRERENDER_PROBABILITY),
+  );
+
+  return system_settings_form($form);
+}
+
+/*
+ * Implements template_preprocess_html
+ */
+function pre_preprocess_html(&$variables) {
+  $prerender_paths = array();
+  $next_data = pre_next_probability(pre_current_path());
+
+  if (!is_array($next_data)) {
+    return;
+  }
+
+  foreach ($next_data as $next) {
+    if (($next['probability'] * 100) > variable_get('pre_prerender_probability', PRE_DEFAULT_PRERENDER_PROBABILITY)) {
+      $prerender_paths[] = $next['destination_path'];
+    }
+  }
+
+  foreach ($prerender_paths as $path) {
+    $attributes = array(
+      'href' => $path,
+      'rel' => 'prerender',
+    );
+    drupal_add_html_head_link($attributes, true);
+  }
 }
 
 /**
@@ -32,9 +104,41 @@ function pre_cron() {
 
   // We usually don't want to act every time cron runs (which could be every
   // minute) so keep a time for the next run in a variable.
-  if (time() >= variable_get('pre_next_execution', 0)) {
-    pre_update_ga();
-    watchdog('pre', 'pre_cron executed');
-    variable_set('pre_next_execution', time() + $interval);
+  if (time() >= $interval + variable_get('pre_last_execution', 0)) {
+    $result = pre_update_ga();
+    if ($result) {
+      watchdog('pre', 'pre_cron executed');
+      variable_set('pre_last_execution', time());
+    }
   }
+}
+
+/*
+ * Implements hook_requirements
+ */
+function pre_requirements($phase) {
+  $requirements = array();
+  // Ensure translations don't break during installation.
+  $t = get_t();
+
+  $requirements['pre'] = array();
+
+  // Check pre cron status during runtime
+  if ($phase == 'runtime') {
+    $last = variable_get('pre_last_execution');
+    if (is_numeric($last)) {
+      $requirements['pre']['severity'] = REQUIREMENT_OK;
+      $requirements['pre']['value'] = $t('Last run !time ago', array('!time' => format_interval(REQUEST_TIME - $last)));
+    }
+    else {
+      $requirements['pre'] = array(
+        'severity' => REQUIREMENT_WARNING,
+        'value' => $t('Never run'),
+      );
+    }
+
+    $requirements['pre']['title'] = $t('Pre cron tasks');
+  }
+
+  return $requirements;
 }

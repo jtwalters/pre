@@ -37,7 +37,3 @@ function pre_drush_help($section) {
 function drush_pre_update_ga() {
   pre_update_ga();
 }
-
-function pre_log($status, $message) {
-  drupal_set_message($message, $status);
-}

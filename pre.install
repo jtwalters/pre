@@ -10,7 +10,8 @@
  */
 function pre_uninstall() {
   variable_del('pre_interval');
-  variable_del('pre_next_execution');
+  variable_del('pre_last_execution');
+  variable_del('pre_prerender_probability');
 }
 
 /**

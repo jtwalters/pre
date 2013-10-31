@@ -9,9 +9,42 @@ define('PRE_MAX_SOURCES', 25);
 define('PRE_MAX_DESTINATIONS', 5);
 
 /*
+ * Get path to current page
+ */
+function pre_current_path() {
+  return request_uri();
+}
+
+/*
+ * Get next page data for a given path
+ */
+function pre_next_probability($path, $limit = PRE_MAX_DESTINATIONS) {
+  $result = db_select('pre_visitor_flow', 'p')
+    ->fields('p', array('source_path', 'destination_path', 'probability'))
+    ->condition('source_path', $path, 'LIKE')
+    ->orderBy('probability', 'DESC')
+    ->range(0, $limit)
+    ->execute();
+  if ($result->rowCount() > 0) {
+    $rows = array();
+    while ($row = $result->fetchAssoc()) {
+      $rows[] = array(
+        'destination_path' => $row['destination_path'],
+        'probability' => $row['probability'],
+      );
+    }
+    return $rows;
+  }
+  else {
+    return FALSE;
+  }
+}
+
+/*
  * Fetch and save GA visitor flow data to local database
  */
 function pre_update_ga() {
+  $profile = variable_get('google_analytics_reports_profile_id', 0);
   $data = pre_get_visitor_flow();
 
   if (is_array($data)) {
@@ -28,8 +61,11 @@ function pre_update_ga() {
         ->execute();
     }
 
-    $profile = variable_get('google_analytics_reports_profile_id', 0);
-    pre_log('status', t('Successfully processed GA data for profile @profile', array('@profile' => $profile)));
+    pre_log('status', t('Successfully processed GA data for profile @profile.', array('@profile' => $profile)));
+  }
+  else {
+    pre_log('error', t('Error. Could not process GA data for profile @profile.', array('@profile' => $profile)));
+    return FALSE;
   }
 }
 
@@ -99,4 +135,11 @@ function _pre_path_filter($path, $type = 'ga:pagePath') {
     $filter = "$type=@$path;$type=~" . preg_quote(substr($path, -100)) . '(#.*)?$';
   }
   return $filter;
+}
+
+/*
+ * Logging helper
+ */
+function pre_log($status, $message) {
+  drupal_set_message($message, $status);
 }
