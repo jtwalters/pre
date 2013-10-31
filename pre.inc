@@ -67,6 +67,7 @@ function pre_update_ga() {
     pre_log('error', t('Error. Could not process GA data for profile @profile.', array('@profile' => $profile)));
     return FALSE;
   }
+  return TRUE;
 }
 
 /**
