@@ -142,5 +142,5 @@ function _pre_path_filter($path, $type = 'ga:pagePath') {
  * Logging helper
  */
 function pre_log($status, $message) {
-  drupal_set_message($message, $status);
+  drupal_set_message(check_plain($message), $status);
 }

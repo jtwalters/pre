@@ -91,7 +91,7 @@ function pre_preprocess_html(&$variables) {
       'href' => $path,
       'rel' => 'prerender',
     );
-    drupal_add_html_head_link($attributes, true);
+    drupal_add_html_head_link($attributes, TRUE);
   }
 }
 
