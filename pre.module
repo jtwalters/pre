@@ -164,9 +164,7 @@ function pre_form_node_form_alter(&$form, &$form_state) {
     '#default_value' => PRE_PRERENDER_NEVER_DEFAULT,
   );
   if (isset($node->nid)) {
-    $form['pre']['prerender_never'] = array(
-      '#default_value' => variable_get('pre_prerender_never_' . $node->nid, PRE_PRERENDER_NEVER_DEFAULT),
-    );
+    $form['pre']['prerender_never']['#default_value'] = variable_get('pre_prerender_never_' . $node->nid, PRE_PRERENDER_NEVER_DEFAULT);
   }
 
   // Specify prerender URL
@@ -176,8 +174,6 @@ function pre_form_node_form_alter(&$form, &$form_state) {
     '#size' => '70',
   );
   if (isset($node->nid)) {
-    $form['pre']['prerender_url'] = array(
-      '#default_value' => variable_get('pre_prerender_url_' . $node->nid, FALSE),
-    );
+    $form['pre']['prerender_url']['#default_value'] = variable_get('pre_prerender_url_' . $node->nid, FALSE);
   }
 }
