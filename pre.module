@@ -12,6 +12,7 @@
  */
 
 define('PRE_DEFAULT_PRERENDER_PROBABILITY', 50);
+define('PRE_PRERENDER_NEVER_DEFAULT', 0);
 
 /*
  * Implements hook_init()
@@ -141,4 +142,42 @@ function pre_requirements($phase) {
   }
 
   return $requirements;
+}
+
+/**
+ * Implements hook_form_BASE_FORM_ID_alter().
+ *
+ * Add the Pre settings to the node form.
+ */
+function pre_form_node_form_alter(&$form, &$form_state) {
+  $node = $form_state['node'];
+  $form['pre'] = array(
+    '#group' => 'additional_settings',
+    '#type' => 'fieldset',
+    '#title' => 'Prefetch / Prerender',
+  );
+
+  // Suppress prerender
+  $form['pre']['prerender_never'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Never prerender pages from this node.'),
+    '#default_value' => PRE_PRERENDER_NEVER_DEFAULT,
+  );
+  if (isset($node->nid)) {
+    $form['pre']['prerender_never'] = array(
+      '#default_value' => variable_get('pre_prerender_never_' . $node->nid, PRE_PRERENDER_NEVER_DEFAULT),
+    );
+  }
+
+  // Specify prerender URL
+  $form['pre']['prerender_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Prerender this URL:'),
+    '#size' => '70',
+  );
+  if (isset($node->nid)) {
+    $form['pre']['prerender_url'] = array(
+      '#default_value' => variable_get('pre_prerender_url_' . $node->nid, FALSE),
+    );
+  }
 }
