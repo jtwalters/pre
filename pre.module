@@ -76,37 +76,41 @@ function pre_admin() {
 function pre_preprocess_html(&$variables) {
   $node = menu_get_object();
 
+  // stop here if $node->nid isn't set
+  if (!isset($node->nid)) {
+    return;
+  }
+
   // stop here if this node has "never prerender" option
   $never_prerender = variable_get('pre_prerender_never_' . $node->nid, FALSE);
   if ($never_prerender) {
     return;
   }
 
-  $prerender_paths = array();
+  $prerender_path = null;
   $next_data = pre_next_probability(pre_current_path());
 
   // add always prerender path if set
   $always_prerender_url = variable_get('pre_prerender_url_' . $node->nid, FALSE);
   if ($always_prerender_url) {
-    $prerender_paths[] = $always_prerender_url;
+    $prerender_path = $always_prerender_url;
   }
-
-  // add paths that meet probability threshold
-  if (is_array($next_data)) {
-    foreach ($next_data as $next) {
-      if (($next['probability'] * 100) > variable_get('pre_prerender_probability', PRE_DEFAULT_PRERENDER_PROBABILITY)) {
-        $prerender_paths[] = $next['destination_path'];
+  else {
+    // check paths against probability threshold
+    if (is_array($next_data)) {
+      foreach ($next_data as $next) {
+        if (($next['probability'] * 100) > variable_get('pre_prerender_probability', PRE_DEFAULT_PRERENDER_PROBABILITY)) {
+          $prerender_path = $next['destination_path'];
+          break;
+        }
       }
     }
   }
 
-  // remove any duplicates
-  $prerender_paths = array_unique($prerender_paths);
-
-  // add link tags for prerender paths
-  foreach ($prerender_paths as $path) {
+  // add link[rel=prerender] for prerender path
+  if ($prerender_path) {
     $attributes = array(
-      'href' => $path,
+      'href' => $prerender_path,
       'rel' => 'prerender',
     );
     drupal_add_html_head_link($attributes, TRUE);
