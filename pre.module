@@ -33,7 +33,7 @@ function pre_menu() {
     'description' => 'Configure pre module settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('pre_admin'),
-    'access arguments' => array('administer pre settings'),
+    'access arguments' => array('administer pre'),
   );
 
   return $items;
