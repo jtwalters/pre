@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * SimpleTest tests for the pre module.
+ */
+
+
+/**
+ * Helper class with some added functions and properties for testing.
+ */
+class PreBaseCase extends DrupalWebTestCase {
+
+  function setUp(array $modules = array()) {
+    $modules[] = 'pre';
+    parent::setUp($modules);
+
+    // Ensure the test environment has clean URLs enabled.
+    variable_set('clean_url', TRUE);
+
+    // Set relevant pre variables.
+    // variable_set('pre_...', 'some value');
+  }
+
+}
+
+class PreAdminTests extends PreBaseCase {
+
+  public static function getInfo() {
+    // Note: getInfo() strings should not be translated.
+    return array(
+      'name' => 'Pre admin ',
+      'description' => 'Tests the pre admin interface.',
+      'group' => 'Pre',
+    );
+  }
+
+  function setUp(array $modules = array()) {
+    parent::setUp($modules);
+
+    // Create a user and log it in.
+    $this->admin_user = $this->drupalCreateUser(array(
+      'access administration pages',
+      'administer site configuration',
+      'administer pre',
+    ));
+    $this->drupalLogin($this->admin_user);
+  }
+
+  /**
+   * Tests configuration field is save-able
+   */
+  public function testPreAdminUI() {
+    // Load our admin UI, ensure our field exists, is save-able.
+    $var = 'pre_prerender_probability';
+    $test_value = 100;
+
+    $this->drupalGet('admin/config/system/pre');
+    $this->assertFieldByName($var, NULL, 'Found Prerender Threshold field.');
+    $this->drupalPost(NULL, array($var => $test_value), 'Save configuration');
+    $this->assertFieldByName($var, $test_value, 'Prerender Threshold field saved.');
+    $this->assertEqual(variable_get($var, ''), $test_value, 'Prerender Threshold variable saved.');
+  }
+}
