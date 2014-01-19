@@ -191,6 +191,7 @@ function pre_form_node_form_alter(&$form, &$form_state) {
   $form['pre']['pre_prerender_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Prerender this URL:'),
+    '#description' => t('Leave blank to use default behavior based on visitor data'),
     '#size' => '70',
     '#states' => array(
       // Hide when disabled is checked
@@ -210,8 +211,8 @@ function pre_form_node_form_alter(&$form, &$form_state) {
 function pre_node_validate($node, $form, &$form_state) {
   // if saving node form
   if ($form_state['values']['op'] == t('Save')) {
-    // check validity of pre_prerender_url
-    if (!valid_url($form_state['values']['pre_prerender_url'], TRUE)) {
+    // if pre_prerender_url is non-empty and invalid URL then error
+    if (!empty($form_state['values']['pre_prerender_url']) && !valid_url($form_state['values']['pre_prerender_url'], TRUE)) {
       form_set_error('url', t('The URL %url is invalid. Enter a fully-qualified URL, such as http://www.example.com/.', array('%url' => $form_state['values']['pre_prerender_url'])));
     }
   }
