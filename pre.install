@@ -5,47 +5,80 @@
  * Install, update and uninstall functions for the pre module.
  */
 
+
+/**
+ * Implements hook_install().
+ */
+function pre_install() {
+  $fields = array(
+    'pre_prerender_disable' => array(
+      'description' => 'Boolean indicating whether the node is prerender-disabled',
+      'type' => 'int',
+      'not null' => TRUE,
+      'default' => 0,
+    ),
+    'pre_prerender_url' => array(
+      'description' => 'Always prerender a specific URL (override default behavior)',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '',
+    ),
+  );
+
+  // Add node fields
+  foreach ($fields as $name => $field) {
+    db_add_field('node', $name, $field);
+  }
+}
+
 /**
  * Implements hook_uninstall().
  */
 function pre_uninstall() {
+  // Delete variables
   variable_del('pre_interval');
   variable_del('pre_last_execution');
   variable_del('pre_prerender_probability');
+
+  // Drop node fields
+  db_drop_field('node', 'pre_prerender_disable');
+  db_drop_field('node', 'pre_prerender_url');
 }
 
 /**
  * Implements hook_schema().
  */
 function pre_schema() {
-  $schema = array();
-
-  $schema['pre_visitor_flow'] = array(
-    'description' => 'Table for storing GA visitor flow data',
-    'fields' => array(
-      'source_path' => array(
-        'description' => 'The source path',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
+  $schema = array(
+    'pre_visitor_flow' => array(
+      'description' => 'Table for storing GA visitor flow data',
+      'fields' => array(
+        'source_path' => array(
+          'description' => 'The source path',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'destination_path' => array(
+          'description' => 'The destination path',
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => TRUE,
+          'default' => '',
+        ),
+        'probability' => array(
+          'description' => 'Probability (a value between 0 and 1)',
+          'type' => 'float',
+          'not null' => TRUE,
+          'default' => 0,
+        ),
       ),
-      'destination_path' => array(
-        'description' => 'The destination path',
-        'type' => 'varchar',
-        'length' => 255,
-        'not null' => TRUE,
-        'default' => '',
-      ),
-      'probability' => array(
-        'description' => 'Probability (a value between 0 and 1)',
-        'type' => 'float',
-        'not null' => TRUE,
-        'default' => 0,
-      ),
+      'primary key' => array('source_path', 'destination_path'),
     ),
-    'primary key' => array('source_path', 'destination_path'),
   );
 
   return $schema;
 }
+

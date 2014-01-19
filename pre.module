@@ -7,12 +7,12 @@
  *
  * This is the main module file.
  *
+ * @todo Save node related properties when node form is submitted
  * @todo Prefetch stuff
- * @todo JavaScript API for pre
  */
 
 define('PRE_DEFAULT_PRERENDER_PROBABILITY', 50);
-define('PRE_PRERENDER_NEVER_DEFAULT', 0);
+define('PRE_PRERENDER_DISABLE_DEFAULT', 0);
 
 /*
  * Implements hook_init()
@@ -81,9 +81,8 @@ function pre_preprocess_html(&$variables) {
     return;
   }
 
-  // stop here if this node has "never prerender" option
-  $never_prerender = variable_get('pre_prerender_never_' . $node->nid, FALSE);
-  if ($never_prerender) {
+  // stop here if this node has prerender disabled
+  if ($node->pre_prerender_disable) {
     return;
   }
 
@@ -91,9 +90,8 @@ function pre_preprocess_html(&$variables) {
   $next_data = pre_next_probability(pre_current_path());
 
   // add always prerender path if set
-  $always_prerender_url = variable_get('pre_prerender_url_' . $node->nid, FALSE);
-  if ($always_prerender_url) {
-    $prerender_path = $always_prerender_url;
+  if ($node->pre_prerender_url) {
+    $prerender_path = $node->pre_prerender_url;
   }
   else {
     // check paths against probability threshold
@@ -172,29 +170,68 @@ function pre_requirements($phase) {
  */
 function pre_form_node_form_alter(&$form, &$form_state) {
   $node = $form_state['node'];
+
   $form['pre'] = array(
     '#group' => 'additional_settings',
     '#type' => 'fieldset',
-    '#title' => 'Prefetch / Prerender',
+    '#title' => 'Prefetch/Prerender',
   );
 
   // Suppress prerender
-  $form['pre']['prerender_never'] = array(
+  $form['pre']['pre_prerender_disable'] = array(
     '#type' => 'checkbox',
     '#title' => t('Never prerender pages from this node.'),
-    '#default_value' => PRE_PRERENDER_NEVER_DEFAULT,
+    '#default_value' => PRE_PRERENDER_DISABLE_DEFAULT,
   );
   if (isset($node->nid)) {
-    $form['pre']['prerender_never']['#default_value'] = variable_get('pre_prerender_never_' . $node->nid, PRE_PRERENDER_NEVER_DEFAULT);
+    $form['pre']['pre_prerender_disable']['#default_value'] = $node->pre_prerender_disable;
   }
 
   // Specify prerender URL
-  $form['pre']['prerender_url'] = array(
+  $form['pre']['pre_prerender_url'] = array(
     '#type' => 'textfield',
     '#title' => t('Prerender this URL:'),
     '#size' => '70',
+    '#states' => array(
+      // Hide when disabled is checked
+      'invisible' => array(
+        'input[name="pre_prerender_disable"]' => array('checked' => TRUE),
+      ),
+    ),
   );
   if (isset($node->nid)) {
-    $form['pre']['prerender_url']['#default_value'] = variable_get('pre_prerender_url_' . $node->nid, FALSE);
+    $form['pre']['pre_prerender_url']['#default_value'] = $node->pre_prerender_url;
   }
+}
+
+/**
+ * Implements hook_node_validate().
+ */
+function pre_node_validate($node, $form, &$form_state) {
+  // if saving node form
+  if ($form_state['values']['op'] == t('Save')) {
+    // check validity of pre_prerender_url
+    if (!valid_url($form_state['values']['pre_prerender_url'], TRUE)) {
+      form_set_error('url', t('The URL %url is invalid. Enter a fully-qualified URL, such as http://www.example.com/.', array('%url' => $form_state['values']['pre_prerender_url'])));
+    }
+  }
+}
+
+/**
+ * Implements hook_schema_alter()
+ * TODO: figure out how to refactor this so it's not redundantly defined in pre.install
+ */
+function pre_schema_alter(&$schema) {
+  $schema['node']['fields']['pre_prerender_disable'] = array(
+    'type' => 'int',
+    'not null' => TRUE,
+    'default' => 1,
+  );
+
+  $schema['node']['fields']['pre_prerender_url'] = array(
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+  );
 }
