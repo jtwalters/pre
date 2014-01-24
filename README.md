@@ -9,6 +9,7 @@ Next, you need to visit `admin/config/system/google-analytics-reports` to authen
 ## Usage
 * Check the status report page to verify the module has up to date GA visitor flow data.
 * Configure the module settings at `admin/config/system/pre`.
+* Configure per node settings on the node add/edit pages.
 
 ## Future Features
 * prefetch helper
