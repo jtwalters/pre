@@ -6,9 +6,6 @@
  * by Google Analytics.
  *
  * This is the main module file.
- *
- * @todo Save node related properties when node form is submitted
- * @todo Prefetch stuff
  */
 
 define('PRE_DEFAULT_PRERENDER_PROBABILITY', 65);
