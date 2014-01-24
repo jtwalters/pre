@@ -213,7 +213,7 @@ function pre_node_validate($node, $form, &$form_state) {
   if ($form_state['values']['op'] == t('Save')) {
     // if pre_prerender_url is non-empty and invalid URL then error
     if (!empty($form_state['values']['pre_prerender_url']) && !valid_url($form_state['values']['pre_prerender_url'], TRUE)) {
-      form_set_error('url', t('The URL %url is invalid. Enter a fully-qualified URL, such as http://www.example.com/.', array('%url' => $form_state['values']['pre_prerender_url'])));
+      form_set_error('pre_prerender_url', t('The URL %url is invalid. Enter a fully-qualified URL, such as http://www.example.com/.', array('%url' => $form_state['values']['pre_prerender_url'])));
     }
   }
 }
