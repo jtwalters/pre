@@ -5,14 +5,34 @@
  * Helper functions for the pre module
  */
 
-define('PRE_MAX_SOURCES', 25);
-define('PRE_MAX_DESTINATIONS', 5);
 
 /*
  * Get path to current page
  */
 function pre_current_path() {
   return request_uri();
+}
+
+/**
+ * Get all path data for reporting purposes
+ */
+function pre_get_path_data() {
+    $result = db_select('pre_visitor_flow', 'p')
+    ->fields('p', array('source_path', 'destination_path', 'probability'))
+    ->extend('PagerDefault')
+    ->orderBy('probability', 'DESC')
+    ->limit(PRE_REPORT_ITEMS_PER_PAGE)
+    ->execute();
+  if ($result->rowCount() > 0) {
+    $rows = array();
+    while ($row = $result->fetchAssoc()) {
+      $rows[] = $row;
+    }
+    return $rows;
+  }
+  else {
+    return FALSE;
+  }
 }
 
 /*

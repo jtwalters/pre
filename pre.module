@@ -10,6 +10,9 @@
 
 define('PRE_DEFAULT_PRERENDER_PROBABILITY', 65);
 define('PRE_PRERENDER_DISABLE_DEFAULT', 0);
+define('PRE_MAX_SOURCES', 25);
+define('PRE_MAX_DESTINATIONS', 5);
+define('PRE_REPORT_ITEMS_PER_PAGE', 50);
 
 /*
  * Implements hook_init()
@@ -33,6 +36,14 @@ function pre_menu() {
     'access arguments' => array('administer pre'),
   );
 
+  $items['admin/reports/pre'] = array(
+    'title' => 'Pre Summary',
+    'description' => 'View a summary of your Google Analytics page data.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('pre_admin_summary'),
+    'access arguments' => array('administer pre'),
+  );
+
   return $items;
 }
 
@@ -45,6 +56,50 @@ function pre_permission() {
       'title' => t('administer pre settings'),
     ),
   );
+}
+
+/**
+ * Menu callback - admin summary report
+ */
+function pre_admin_summary() {
+  $page = array();
+  $data = pre_get_path_data();
+
+  if (empty($data)) {
+    drupal_set_message(
+      t('You don\'t have any Google Analytics report data available yet. Have you configured <a href="@ga_url">Google Analytics Reports</a>? Check the <a href="@status_url">status report</a> to see if pre cron task has run.',
+        array(
+          '@ga_url' => url('admin/config/system/google-analytics-reports'),
+          '@status_url' => url('admin/reports/status'),
+        )
+      ),
+      'warning'
+    );
+    return $page;
+  }
+
+  $header = array(
+    'Source',
+    'Destination',
+    'Probability',
+  );
+
+  // format probability numbers
+  foreach ($data as &$row) {
+    $row['probability'] = number_format(round($row['probability'] * 100, 2), 2) . '%';
+  }
+
+  $page['table'] = array(
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $data,
+  );
+
+  $page['pager'] = array(
+    '#theme' => 'pager',
+  );
+
+  return $page;
 }
 
 /**
