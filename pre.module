@@ -11,7 +11,7 @@
  * @todo Prefetch stuff
  */
 
-define('PRE_DEFAULT_PRERENDER_PROBABILITY', 50);
+define('PRE_DEFAULT_PRERENDER_PROBABILITY', 65);
 define('PRE_PRERENDER_DISABLE_DEFAULT', 0);
 
 /*
@@ -56,13 +56,16 @@ function pre_permission() {
 function pre_admin() {
   $form = array();
   $options = array();
-  for ($i = 10; $i <= 100; $i += 10) {
+  for ($i = 35; $i <= 95; $i += 5) {
     $options[$i] = "$i%";
+    if ($i == PRE_DEFAULT_PRERENDER_PROBABILITY) {
+      $options[$i] .= ' (default)';
+    }
   }
   $form['pre_prerender_probability'] = array(
     '#type' => 'select',
     '#title' => 'Prerender Threshold',
-    '#description' => 'Probability threshold for requesting a prerender—i.e., pages with at least <em>n%</em> chance of being viewed next will request prerender.',
+    '#description' => 'Probability threshold for requesting a prerender—i.e., pages with at least <em>n%</em> chance of being viewed next will request prerender. Setting this value too low may be bad. "It is better to do nothing than mis-use prerender." —rupl',
     '#options' => $options,
     '#default_value' => variable_get('pre_prerender_probability', PRE_DEFAULT_PRERENDER_PROBABILITY),
   );
