@@ -26,6 +26,8 @@ class PreBaseCase extends DrupalWebTestCase {
 
 class PreAdminTests extends PreBaseCase {
 
+  protected $admin_user;
+
   public static function getInfo() {
     // Note: getInfo() strings should not be translated.
     return array(
@@ -38,20 +40,27 @@ class PreAdminTests extends PreBaseCase {
   function setUp(array $modules = array()) {
     parent::setUp($modules);
 
-    // Create a user and log it in.
+    // Create an admin user
     $this->admin_user = $this->drupalCreateUser(array(
       'access administration pages',
       'administer site configuration',
       'administer pre',
+      'create page content',
     ));
-    $this->drupalLogin($this->admin_user);
   }
 
   /**
-   * Tests configuration field is save-able
+   * Tests the pre admin user interface
    */
   public function testPreAdminUI() {
-    // Load our admin UI, ensure our field exists, is save-able.
+    // Check that admin page returns access denied when not logged in
+    $this->drupalGet('admin/config/system/pre');
+    $this->assertResponse(403, 'Access is denied on the administration page.');
+
+    // Log in admin
+    $this->drupalLogin($this->admin_user);
+
+    // Load our admin UI, ensure our field exists and is save-able.
     $var = 'pre_prerender_probability';
     $test_value = 100;
 
@@ -60,5 +69,46 @@ class PreAdminTests extends PreBaseCase {
     $this->drupalPost(NULL, array($var => $test_value), 'Save configuration');
     $this->assertFieldByName($var, $test_value, 'Prerender Threshold field saved.');
     $this->assertEqual(variable_get($var, ''), $test_value, 'Prerender Threshold variable saved.');
+  }
+
+  /**
+   * Ensure our node add/edit form fields exist and are save-able.
+   */
+  public function testPreNodeAdminUI() {
+    // Log in admin
+    $this->drupalLogin($this->admin_user);
+
+    // Load node/add page
+    $this->drupalGet('node/add/page');
+
+    // Ensure our fields exist
+    $this->assertFieldByName('pre_prerender_disable', NULL, 'Found pre_prerender_disable field.');
+    $this->assertFieldByName('pre_prerender_url', NULL, 'Found pre_prerender_url field.');
+
+    // Ensure good values can be saved
+    $test_values_good = array(
+      'pre_prerender_disable' => 1,
+      'pre_prerender_url' => 'http://www.example.com/xyz',
+    );
+
+    $this->drupalPost(NULL, $test_values_good, 'Save');
+
+    foreach ($test_values_good as $field => $value) {
+      $this->assertFieldByName($field, $value, format_string('%field field saved.', array('%field' => $field)));
+    }
+
+    // Ensure bad values result in errors
+    $test_values_bad = array(
+      'pre_prerender_url' => 'example.com/foo bar !',
+    );
+
+    // Save the node/add form
+    $this->drupalPost(NULL, $test_values_bad, 'Save');
+
+    foreach ($test_values_bad as $field => $value) {
+      // check that input element is flagged with an error
+      // XPath query: input elements with matching name attribute and has class 'error'
+      $this->assertFieldByXPath("//input[(@name='$field') and contains(concat(' ', normalize-space(@class), ' '), ' error ')]", FALSE, format_string('%field field has an invalid value (%value).', array('%field' => $field, '%value' => $value)));
+    }
   }
 }
